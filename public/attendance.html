@@ -2,16 +2,16 @@
 <html lang="en">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Attendance List</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css" />
 </head>
 
 <body>
     <div style="max-width: 800px; margin: 40px auto; background: white; padding: 30px;">
-        <div style="display: flex; justify-content: space-between;">
-            <h2 id="page-title">Class</h2>
+        <div style="display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap;">
+            <h2 id="page-title">Class Attendance</h2>
             <h2><span id="count">0</span> Present</h2>
         </div>
 
@@ -19,7 +19,7 @@
             <thead>
                 <tr>
                     <th>Name</th>
-                    <th>Adm No</th>
+                    <th>University ID</th>
                     <th>Time</th>
                 </tr>
             </thead>
@@ -28,6 +28,7 @@
 
         <button onclick="window.close()" class="btn-secondary mt-2">Close Window</button>
     </div>
+
     <script src="script.js"></script>
 </body>
 

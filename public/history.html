@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>History</title>
+    <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+    <nav>
+        <span>📚 History</span>
+        <button id="logout-btn" class="btn-secondary" style="width:auto;">Logout</button>
+    </nav>
+
+    <div style="padding:20px; max-width:1100px; margin:0 auto;">
+        <div class="card" style="max-width:100%;">
+            <h3 id="history-title">Loading...</h3>
+            <p id="history-subtitle" style="margin-top:6px; color:#666;"></p>
+
+            <!-- Lecturer panel -->
+            <div id="lecturer-panel" class="hidden">
+                <div class="row">
+                    <button id="export-sessions-btn" class="btn-success" style="margin-top:0;">⬇️ Export Sessions CSV</button>
+                    <a href="registerSessions.html" class="btn">👨‍🏫 Back to Dashboard</a>
+                </div>
+
+                <table class="history-table">
+                    <thead>
+                        <tr>
+                            <th>Session ID</th>
+                            <th>Unit</th>
+                            <th>Started</th>
+                            <th>Ended</th>
+                            <th>Active</th>
+                            <th>Attended</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="lecturer-sessions-body"></tbody>
+                </table>
+
+                <div id="lecturer-session-details" class="mt-2 hidden" style="background:#fff; padding:16px; border-radius:10px;">
+                    <div class="row">
+                        <h4 style="margin:0;">Session Attendance: <span id="details-session-id"></span></h4>
+                        <button id="export-attendance-btn" class="btn-success" style="margin-top:0;">⬇️ Export Attendance CSV</button>
+                    </div>
+
+                    <table class="history-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>University ID</th>
+                                <th>Time</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="lecturer-attendance-body"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Student panel -->
+            <div id="student-panel" class="hidden">
+                <div class="row">
+                    <button id="export-attended-btn" class="btn-success" style="margin-top:0;">⬇️ Export My Attendance CSV</button>
+                    <a href="atendeeScan.html" class="btn-secondary btn" style="background:#6c757d;">🎓 Back to Scanner</a>
+                </div>
+
+                <table class="history-table">
+                    <thead>
+                        <tr>
+                            <th>Unit</th>
+                            <th>Session ID</th>
+                            <th>Session Start</th>
+                            <th>Session End</th>
+                            <th>My Attendance Time</th>
+                        </tr>
+                    </thead>
+                    <tbody id="student-attended-body"></tbody>
+                </table>
+            </div>
+
+            <div id="history-error" class="hidden" style="margin-top:12px; color:#c00;"></div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
