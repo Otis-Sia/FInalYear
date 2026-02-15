@@ -21,7 +21,7 @@ async function apiFetch(path, options = {}) {
     let data = null;
     try {
         data = await res.json();
-    } catch (_) {}
+    } catch (_) { }
 
     if (!res.ok) {
         const msg = data?.error || `Request failed (${res.status})`;
@@ -147,7 +147,7 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         });
 
-        el("auth-form").addEventListener("submit", async(e) => {
+        el("auth-form").addEventListener("submit", async (e) => {
             e.preventDefault();
 
             const btn = el("submit-btn");
@@ -225,7 +225,7 @@ document.addEventListener("DOMContentLoaded", () => {
         loadUnits();
 
         if (el("add-unit-btn")) {
-            el("add-unit-btn").addEventListener("click", async() => {
+            el("add-unit-btn").addEventListener("click", async () => {
                 const code = el("new-code").value.trim();
                 const name = el("new-name").value.trim();
                 if (!code || !name) return alert("Please fill in both Code and Name");
@@ -246,7 +246,7 @@ document.addEventListener("DOMContentLoaded", () => {
             });
         }
 
-        el("start-btn").addEventListener("click", async() => {
+        el("start-btn").addEventListener("click", async () => {
             const unit = el("unit-select").value;
             if (!unit) return alert("Select a unit first");
 
@@ -328,7 +328,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }, 1000);
 
         if (el("end-btn")) {
-            el("end-btn").onclick = async() => {
+            el("end-btn").onclick = async () => {
                 try {
                     await apiFetch(`/sessions/${sessionId}/end`, {
                         method: "PUT",
@@ -366,6 +366,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const scanner = new Html5QrcodeScanner("reader", {
             fps: 10,
             qrbox: 250,
+            videoConstraints: { facingMode: "environment" },
             supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA],
         });
 
@@ -556,7 +557,7 @@ document.addEventListener("DOMContentLoaded", () => {
             };
 
             // Click handlers for "View"
-            body.addEventListener("click", async(e) => {
+            body.addEventListener("click", async (e) => {
                 const btn = e.target.closest("[data-view-session]");
                 if (!btn) return;
                 const sessionId = btn.getAttribute("data-view-session");
@@ -629,7 +630,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         // Run
-        (async() => {
+        (async () => {
             try {
                 if (role === "lecturer") await loadLecturerHistory();
                 else if (role === "student") await loadStudentHistory();

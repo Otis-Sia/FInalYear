@@ -79,7 +79,8 @@ function parseBoolToTinyInt(v, defaultTrue = true) {
  * Required: name, university_id, password, role
  * Optional: email (only if your DB supports NULL emails)
  */
-app.post("/api/register", async(req, res) => {
+app.post("/api/register", async (req, res) => {
+    console.log("👉 [REGISTER] Request Body:", req.body);
     const { name, university_id, password, role, email } = req.body;
 
     if (isBlank(name) || isBlank(university_id) || isBlank(password) || isBlank(role)) {
@@ -97,8 +98,8 @@ app.post("/api/register", async(req, res) => {
         // If your schema has email NULL allowed, include it. Otherwise remove email parts.
         const hasEmail = !isBlank(email);
         const sql = hasEmail ?
-            `INSERT INTO users (name, university_id, email, password, role) VALUES (?, ?, ?, ?, ?)` :
-            `INSERT INTO users (name, university_id, password, role) VALUES (?, ?, ?, ?)`;
+            `INSERT INTO users (full_name, user_id, email, password, role) VALUES (?, ?, ?, ?, ?)` :
+            `INSERT INTO users (full_name, user_id, password, role) VALUES (?, ?, ?, ?)`;
 
         const values = hasEmail ?
             [String(name).trim(), String(university_id).trim(), String(email).trim(), hashedPassword, normalizedRole] :
@@ -107,11 +108,13 @@ app.post("/api/register", async(req, res) => {
         db.query(sql, values, (err) => {
             if (err) {
                 if (err.code === "ER_DUP_ENTRY") {
+                    console.warn("⚠️ [REGISTER] Duplicate entry:", err.message);
                     return res.status(409).json({ error: "User already exists (ID or email already used)" });
                 }
-                console.error("Register DB error:", err);
-                return res.status(500).json({ error: "Database error" });
+                console.error("❌ [REGISTER] DB Error:", err);
+                return res.status(500).json({ error: "Database error: " + err.message });
             }
+            console.log("✅ [REGISTER] Success for user:", name);
             return res.json({ success: true });
         });
     } catch (err) {
@@ -132,13 +135,13 @@ app.post("/api/login", (req, res) => {
     }
 
     const sql = `
-    SELECT id, name, university_id, password, role
+    SELECT id, full_name as name, user_id as university_id, password, role
     FROM users
-    WHERE university_id = ?
+    WHERE user_id = ?
     LIMIT 1
   `;
 
-    db.query(sql, [String(university_id).trim()], async(err, results) => {
+    db.query(sql, [String(university_id).trim()], async (err, results) => {
         if (err) {
             console.error("Login DB error:", err);
             return res.status(500).json({ error: "Database error" });
@@ -152,14 +155,18 @@ app.post("/api/login", (req, res) => {
 
         try {
             const isMatch = await bcrypt.compare(String(password), user.password);
-            if (!isMatch) return res.status(401).json({ error: "Invalid ID or password" });
+            if (!isMatch) {
+                console.warn("⚠️ [LOGIN] Password mismatch for user:", user.name);
+                return res.status(401).json({ error: "Invalid ID or password" });
+            }
+            console.log("✅ [LOGIN] Success:", user.name, "(Role:", user.role, ")");
 
             return res.json({
                 success: true,
                 user: {
                     id: user.id,
-                    name: user.name,
-                    university_id: user.university_id,
+                    name: user.name, // aliased in query
+                    university_id: user.university_id, // aliased in query
                     role: normalizeRole(user.role) // normalize on output so frontend redirect works
                 }
             });
@@ -218,6 +225,7 @@ app.post("/api/units", (req, res) => {
  * If require_gps = 0 -> latitude & longitude can be NULL
  */
 app.post("/api/sessions", (req, res) => {
+    console.log("👉 [SESSION START] Request:", req.body);
     const { unit_code, lecturer_id, latitude, longitude, require_gps } = req.body;
 
     if (isBlank(unit_code) || isBlank(lecturer_id)) {
@@ -252,9 +260,10 @@ app.post("/api/sessions", (req, res) => {
 
     db.query(sql, [String(unit_code).trim(), lecturerId, token, lat, lon, gpsRequired], (err, result) => {
         if (err) {
-            console.error("Start session error:", err);
-            return res.status(500).json({ error: "Failed to start session" });
+            console.error("❌ [SESSION START] DB Error:", err);
+            return res.status(500).json({ error: "Failed to start session: " + err.message });
         }
+        console.log("✅ [SESSION START] Success! ID:", result.insertId);
         res.json({
             success: true,
             session_id: result.insertId,
@@ -336,6 +345,7 @@ app.put("/api/sessions/:id/end", (req, res) => {
  * GPS required only if session.require_gps = 1
  */
 app.post("/api/attendance", (req, res) => {
+    console.log("👉 [ATTENDANCE] Request:", req.body);
     const { student_id, session_id, qr_token, latitude, longitude, device_id } = req.body;
 
     if (isBlank(student_id) || isBlank(session_id) || isBlank(qr_token) || isBlank(device_id)) {
@@ -372,6 +382,7 @@ app.post("/api/attendance", (req, res) => {
         }
 
         if (session.qr_token !== String(qr_token)) {
+            console.warn("⚠️ [ATTENDANCE] Invalid QR Token. Received:", qr_token, "Expected:", session.qr_token);
             return res.status(403).json({ error: "Invalid or expired QR code" });
         }
 
@@ -429,7 +440,8 @@ app.post("/api/attendance", (req, res) => {
                     );
 
                     if (dist > 100) {
-                        return res.status(403).json({
+                        console.warn(`⚠️ [ATTENDANCE] GPS too far: ${dist}m > 100m`);
+                        return res.status(433).json({
                             error: `Too far! You are ${Math.round(dist)}m away.`,
                             distance: Math.round(dist),
                             lecturer_location: { lat: Number(session.latitude), lon: Number(session.longitude) }
@@ -471,7 +483,7 @@ app.get("/api/sessions/:id/attendance", (req, res) => {
     if (!Number.isFinite(sessionId)) return res.status(400).json({ error: "Invalid session id" });
 
     const sql = `
-    SELECT u.name, u.university_id, a.timestamp, a.status
+    SELECT u.full_name as name, u.user_id as university_id, a.timestamp, a.status
     FROM attendance a
     JOIN users u ON a.student_id = u.id
     WHERE a.session_id = ?
@@ -552,6 +564,6 @@ app.get("/api/history/student/:student_id/attended", (req, res) => {
 });
 
 /* ================= SERVER START ================= */
-app.listen(PORT, "0.0.0.0", () => {
-    console.log(`Server running on http://0.0.0.0:${PORT}`);
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
 });
