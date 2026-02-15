@@ -193,7 +193,8 @@ document.addEventListener("DOMContentLoaded", () => {
                     localStorage.setItem("user", JSON.stringify(data.user));
 
                     const role = String(data.user.role || "").trim().toLowerCase();
-                    window.location.href = role === "lecturer" ? "registerSessions.html" : "atendeeScan.html";
+                    if (role === 'admin') window.location.href = "admin.html";
+                    else window.location.href = role === "lecturer" ? "registerSessions.html" : "atendeeScan.html";
                 } else {
                     const name = el("full_name").value.trim();
                     const role = el("role").value; // should be lowercase values in HTML: student/lecturer

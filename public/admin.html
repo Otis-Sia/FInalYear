@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .admin-nav {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .admin-nav button {
+            width: auto;
+            margin-top: 0;
+        }
+
+        .admin-nav button.active {
+            background-color: #0056b3;
+        }
+
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        .form-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            background: white;
+        }
+
+        th,
+        td {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+            text-align: left;
+        }
+
+        th {
+            background-color: #333;
+            color: white;
+        }
+
+        .btn-sm {
+            padding: 5px 10px;
+            font-size: 14px;
+            width: auto;
+            margin: 0;
+        }
+    </style>
+</head>
+
+<body>
+    <nav>
+        <div class="logo">Admin Dashboard</div>
+        <button id="logout-btn" class="btn-danger" style="width: auto; margin:0; padding: 5px 15px;">Logout</button>
+    </nav>
+
+    <div style="padding: 20px; max-width: 1000px; margin: 0 auto;">
+        <h2 id="welcome-msg">Welcome, Admin</h2>
+
+        <div class="admin-nav">
+            <button id="tab-users" class="active">Manage Users</button>
+            <button id="tab-units">Manage Units</button>
+        </div>
+
+        <!-- ================= USERS SECTION ================= -->
+        <div id="section-users" class="section active">
+            <div class="form-card">
+                <h3>Add New User</h3>
+                <form id="add-user-form" class="row">
+                    <input type="text" id="new-user-name" placeholder="Full Name" required>
+                    <input type="text" id="new-user-id" placeholder="University ID / Staff ID" required>
+                    <input type="email" id="new-user-email" placeholder="Email (Optional)">
+                    <input type="password" id="new-user-pass" placeholder="Password" required>
+                    <select id="new-user-role" required>
+                        <option value="student">Student</option>
+                        <option value="lecturer">Lecturer</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                    <button type="submit" class="btn-success" style="width: auto;">Create User</button>
+                </form>
+            </div>
+
+            <div class="card" style="max-width: 100%;">
+                <h3>User List</h3>
+                <div style="overflow-x: auto;">
+                    <table id="users-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>ID</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Last Seen</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody><!-- JS populates --></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= UNITS SECTION ================= -->
+        <div id="section-units" class="section">
+            <div class="form-card">
+                <h3>Add New Unit</h3>
+                <form id="add-unit-form" class="row">
+                    <input type="text" id="new-unit-code" placeholder="Unit Code (e.g. CCS 401)" required>
+                    <input type="text" id="new-unit-name" placeholder="Unit Name" required>
+                    <select id="new-unit-lecturer">
+                        <option value="">-- Assign Lecturer --</option>
+                        <!-- JS populates -->
+                    </select>
+                    <button type="submit" class="btn-success" style="width: auto;">Create Unit</button>
+                </form>
+            </div>
+
+            <div class="card" style="max-width: 100%;">
+                <h3>Unit List</h3>
+                <div style="overflow-x: auto;">
+                    <table id="units-table">
+                        <thead>
+                            <tr>
+                                <th>Code</th>
+                                <th>Name</th>
+                                <th>Lecturer</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody><!-- JS populates --></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/script.js"></script> <!-- reusing common helpers -->
+    <script src="js/admin.js"></script>
+</body>
+
+</html>

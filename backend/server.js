@@ -41,12 +41,82 @@ db.getConnection((err, connection) => {
 });
 
 /* ================= HELPERS ================= */
+function logActivity(userId, action, details = null) {
+    const sql = "INSERT INTO activity_logs (user_id, action, details) VALUES (?, ?, ?)";
+    db.query(sql, [userId, action, details], (err) => {
+        if (err) console.error("⚠️ Failed to log activity:", err.message);
+    });
+}
+
 const isBlank = (v) => v === undefined || v === null || String(v).trim() === "";
 
 const toNumber = (v) => {
     const n = Number(v);
     return Number.isFinite(n) ? n : NaN;
 };
+
+// ... other helpers ...
+
+function logActivity(userId, action, details = null) {
+    const sql = "INSERT INTO activity_logs (user_id, action, details) VALUES (?, ?, ?)";
+    db.query(sql, [userId, action, details], (err) => {
+        if (err) console.error("⚠️ Failed to log activity:", err.message);
+    });
+}
+
+// ... existing code ...
+
+/* ================= AUTH ROUTES ================= */
+
+// ... register ...
+
+/**
+ * Login
+ */
+app.post("/api/login", (req, res) => {
+    // ... existing ...
+
+    // Inside success block:
+    console.log("✅ [LOGIN] Success:", user.name, "(Role:", user.role, ")");
+
+    // Log activity
+    logActivity(user.id, 'LOGIN', 'User logged in');
+
+    return res.json({
+        success: true,
+        user: {
+            id: user.id,
+            name: user.name,
+            university_id: user.university_id,
+            role: normalizeRole(user.role)
+        }
+    });
+    // ...
+});
+
+/* ================= ADMIN ROUTES ================= */
+
+// List all users with Last Seen
+app.get("/api/admin/users", requireAdmin, (req, res) => {
+    console.log("👉 [ADMIN] Fetching users. Admin ID:", req.query.admin_id || req.headers['x-admin-id']);
+
+    const sql = `
+        SELECT u.id, u.full_name, u.user_id, u.email, u.role, u.created_at,
+        (SELECT MAX(timestamp) FROM activity_logs WHERE user_id = u.id) as last_seen
+        FROM users u
+        ORDER BY last_seen DESC, u.created_at DESC
+    `;
+
+    db.query(sql, (err, results) => {
+        if (err) {
+            console.error("❌ [ADMIN] Database error:", err);
+            return res.status(500).json({ error: "Database error" });
+        }
+        // Normalize roles
+        const users = results.map(u => ({ ...u, role: normalizeRole(u.role) }));
+        res.json(users);
+    });
+});
 
 function distanceMeters(lat1, lon1, lat2, lon2) {
     const R = 6371;
@@ -59,6 +129,7 @@ function distanceMeters(lat1, lon1, lat2, lon2) {
         Math.sin(dLon / 2) ** 2;
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return R * c * 1000;
+
 }
 
 function normalizeRole(role) {
@@ -74,7 +145,7 @@ function parseBoolToTinyInt(v, defaultTrue = true) {
 
 /* ================= ADMIN MIDDLEWARE ================= */
 function requireAdmin(req, res, next) {
-    const adminId = req.body.admin_id || req.query.admin_id || req.headers['x-admin-id'];
+    const adminId = (req.body && req.body.admin_id) || req.query.admin_id || req.headers['x-admin-id'];
 
     if (isBlank(adminId)) {
         return res.status(401).json({ error: "Unauthorized: Admin ID required" });
@@ -180,6 +251,10 @@ app.post("/api/login", (req, res) => {
                 return res.status(401).json({ error: "Invalid ID or password" });
             }
             console.log("✅ [LOGIN] Success:", user.name, "(Role:", user.role, ")");
+
+            // Log activity
+            logActivity(user.id, 'LOGIN', 'User logged in');
+
 
             return res.json({
                 success: true,
@@ -579,6 +654,128 @@ app.get("/api/history/student/:student_id/attended", (req, res) => {
             console.error("Student history attended error:", err);
             return res.status(500).json({ error: "Database error" });
         }
+        res.json(results || []);
+    });
+});
+
+/* ================= ADMIN ROUTES ================= */
+
+// List all users
+app.get("/api/admin/users", requireAdmin, (req, res) => {
+    console.log("👉 [ADMIN] Fetching users. Admin ID:", req.query.admin_id || req.headers['x-admin-id']);
+    const sql = `
+        SELECT u.id, u.full_name, u.user_id, u.email, u.role, u.created_at,
+        (SELECT MAX(timestamp) FROM activity_logs WHERE user_id = u.id) as last_seen
+        FROM users u
+        ORDER BY last_seen DESC, u.created_at DESC
+    `;
+    db.query(sql, (err, results) => {
+        if (err) {
+            console.error("❌ [ADMIN] Database error:", err);
+            return res.status(500).json({ error: "Database error" });
+        }
+        // Normalize roles for display
+        const users = results.map(u => ({ ...u, role: normalizeRole(u.role) }));
+        res.json(users);
+    });
+});
+
+// Create user (Admin only)
+app.post("/api/admin/users", requireAdmin, async (req, res) => {
+    const { name, university_id, password, role, email } = req.body;
+
+    if (isBlank(name) || isBlank(university_id) || isBlank(password) || isBlank(role)) {
+        return res.status(400).json({ error: "Missing fields" });
+    }
+
+    const normalizedRole = normalizeRole(role);
+    if (!["student", "lecturer", "admin"].includes(normalizedRole)) {
+        return res.status(400).json({ error: "Invalid role" });
+    }
+
+    try {
+        const hashedPassword = await bcrypt.hash(String(password), 10);
+        const hasEmail = !isBlank(email);
+
+        const sql = hasEmail ?
+            `INSERT INTO users (full_name, user_id, email, password, role) VALUES (?, ?, ?, ?, ?)` :
+            `INSERT INTO users (full_name, user_id, password, role) VALUES (?, ?, ?, ?)`;
+
+        const values = hasEmail ?
+            [String(name).trim(), String(university_id).trim(), String(email).trim(), hashedPassword, normalizedRole] :
+            [String(name).trim(), String(university_id).trim(), hashedPassword, normalizedRole];
+
+        db.query(sql, values, (err) => {
+            if (err) {
+                if (err.code === "ER_DUP_ENTRY") return res.status(409).json({ error: "User already exists" });
+                return res.status(500).json({ error: "Database error" });
+            }
+            res.json({ success: true });
+        });
+    } catch (err) {
+        res.status(500).json({ error: "Server error" });
+    }
+});
+
+// Delete user
+app.delete("/api/admin/users/:id", requireAdmin, (req, res) => {
+    const userId = toNumber(req.params.id);
+    if (!Number.isFinite(userId)) return res.status(400).json({ error: "Invalid ID" });
+
+    // Prevent self-deletion ideally, but keep it simple
+    if (userId === Number(req.body.admin_id) || userId === Number(req.query.admin_id)) {
+        return res.status(400).json({ error: "Cannot delete yourself" });
+    }
+
+    db.query("DELETE FROM users WHERE id = ?", [userId], (err, result) => {
+        if (err) return res.status(500).json({ error: "Database error" });
+        res.json({ success: true });
+    });
+});
+
+// List all units
+app.get("/api/admin/units", requireAdmin, (req, res) => {
+    const sql = `
+        SELECT u.id, u.unit_code, u.unit_name, u.lecturer_id, l.full_name as lecturer_name 
+        FROM units u
+        LEFT JOIN users l ON u.lecturer_id = l.id
+        ORDER BY u.unit_code ASC
+    `;
+    db.query(sql, (err, results) => {
+        if (err) return res.status(500).json({ error: "Database error" });
+        res.json(results);
+    });
+});
+
+// Create Unit (Admin)
+app.post("/api/admin/units", requireAdmin, (req, res) => {
+    const { unit_code, unit_name, lecturer_id } = req.body;
+    if (isBlank(unit_code) || isBlank(unit_name)) return res.status(400).json({ error: "Missing info" });
+
+    // Lecturer ID can be null if not assigned yet? Schema says user can be null. 
+    // Schema: lecturer_id INT, foreign key.
+    const lectId = lecturer_id ? toNumber(lecturer_id) : null;
+
+    const sql = "INSERT INTO units (unit_code, unit_name, lecturer_id) VALUES (?, ?, ?)";
+    db.query(sql, [unit_code, unit_name, lectId], (err) => {
+        if (err) return res.status(500).json({ error: "Database error (check lecturer ID)" });
+        res.json({ success: true });
+    });
+});
+
+// Delete Unit
+app.delete("/api/admin/units/:id", requireAdmin, (req, res) => {
+    const unitId = toNumber(req.params.id);
+    db.query("DELETE FROM units WHERE id = ?", [unitId], (err) => {
+        if (err) return res.status(500).json({ error: "Database error" });
+        res.json({ success: true });
+    });
+});
+
+// Get Lecturers (for dropdowns)
+app.get("/api/admin/lecturers", requireAdmin, (req, res) => {
+    db.query("SELECT id, full_name, user_id FROM users WHERE role = 'lecturer'", (err, results) => {
+        if (err) return res.status(500).json({ error: "Database error" });
         res.json(results || []);
     });
 });

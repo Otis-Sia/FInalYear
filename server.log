@@ -1,86 +1,14 @@
-[dotenv@17.2.3] injecting env (5) from .env -- tip: ⚙️  override existing env vars with { override: true }
+[dotenv@17.2.3] injecting env (5) from .env -- tip: 🔐 encrypt with Dotenvx: https://dotenvx.com
 Server running on port 3000
 Connected to MySQL via Connection Pool
-End session error: Error: Unknown column 'ended_at' in 'field list'
-    at Packet.asError (/home/sia/Desktop/Code/AttendanceManagement/node_modules/mysql2/lib/packets/packet.js:740:17)
-    at Query.execute (/home/sia/Desktop/Code/AttendanceManagement/node_modules/mysql2/lib/commands/command.js:29:26)
-    at PoolConnection.handlePacket (/home/sia/Desktop/Code/AttendanceManagement/node_modules/mysql2/lib/base/connection.js:508:34)
-    at PacketParser.onPacket (/home/sia/Desktop/Code/AttendanceManagement/node_modules/mysql2/lib/base/connection.js:93:12)
-    at PacketParser.executeStart (/home/sia/Desktop/Code/AttendanceManagement/node_modules/mysql2/lib/packet_parser.js:75:16)
-    at Socket.<anonymous> (/home/sia/Desktop/Code/AttendanceManagement/node_modules/mysql2/lib/base/connection.js:100:25)
-    at Socket.emit (node:events:508:20)
-    at addChunk (node:internal/streams/readable:564:12)
-    at readableAddChunkPushByteMode (node:internal/streams/readable:515:3)
-    at Readable.push (node:internal/streams/readable:395:5) {
-  code: 'ER_BAD_FIELD_ERROR',
-  errno: 1054,
-  sqlState: '42S22',
-  sqlMessage: "Unknown column 'ended_at' in 'field list'",
-  sql: '\n' +
-    '    UPDATE sessions\n' +
-    '    SET is_active = 0, ended_at = CURRENT_TIMESTAMP\n' +
-    '    WHERE id = 7 AND lecturer_id = 6 AND is_active = 1\n' +
-    '  '
-}
-👉 [SESSION START] Request: {
-  unit_code: 'cre123',
-  lecturer_id: 6,
-  latitude: -1.0944512,
-  longitude: 37.0212864
-}
-✅ [SESSION START] Success! ID: 8
-👉 [ATTENDANCE] Request: {
-  student_id: 7,
-  session_id: '8',
-  qr_token: 'ce2d17f41caaf10ee1d145da26c827e7',
-  latitude: -1.1022292,
-  longitude: 37.0136232,
-  device_id: 'DEV-88ZLJJUE-MLO1C7W8'
-}
-⚠️ [ATTENDANCE] Invalid QR Token. Received: ce2d17f41caaf10ee1d145da26c827e7 Expected: aa7dbb81e7dbe3c126edc121e5403b8f
-End session error: Error: Unknown column 'ended_at' in 'field list'
-    at Packet.asError (/home/sia/Desktop/Code/AttendanceManagement/node_modules/mysql2/lib/packets/packet.js:740:17)
-    at Query.execute (/home/sia/Desktop/Code/AttendanceManagement/node_modules/mysql2/lib/commands/command.js:29:26)
-    at PoolConnection.handlePacket (/home/sia/Desktop/Code/AttendanceManagement/node_modules/mysql2/lib/base/connection.js:508:34)
-    at PacketParser.onPacket (/home/sia/Desktop/Code/AttendanceManagement/node_modules/mysql2/lib/base/connection.js:93:12)
-    at PacketParser.executeStart (/home/sia/Desktop/Code/AttendanceManagement/node_modules/mysql2/lib/packet_parser.js:75:16)
-    at Socket.<anonymous> (/home/sia/Desktop/Code/AttendanceManagement/node_modules/mysql2/lib/base/connection.js:100:25)
-    at Socket.emit (node:events:508:20)
-    at addChunk (node:internal/streams/readable:564:12)
-    at readableAddChunkPushByteMode (node:internal/streams/readable:515:3)
-    at Readable.push (node:internal/streams/readable:395:5) {
-  code: 'ER_BAD_FIELD_ERROR',
-  errno: 1054,
-  sqlState: '42S22',
-  sqlMessage: "Unknown column 'ended_at' in 'field list'",
-  sql: '\n' +
-    '    UPDATE sessions\n' +
-    '    SET is_active = 0, ended_at = CURRENT_TIMESTAMP\n' +
-    '    WHERE id = 8 AND lecturer_id = 6 AND is_active = 1\n' +
-    '  '
-}
-👉 [SESSION START] Request: {
-  unit_code: 'cre123',
-  lecturer_id: 6,
-  latitude: -1.1022179,
-  longitude: 37.0136174
-}
-✅ [SESSION START] Success! ID: 9
-👉 [ATTENDANCE] Request: {
-  student_id: 7,
-  session_id: '9',
-  qr_token: '256d7b82d49bc53b86b65d64798f87b9',
-  latitude: -1.1020638,
-  longitude: 37.0137466,
-  device_id: 'DEV-88ZLJJUE-MLO1C7W8'
-}
-⚠️ [ATTENDANCE] Invalid QR Token. Received: 256d7b82d49bc53b86b65d64798f87b9 Expected: 4d067bff6605d72c1e2ea0b604900544
-✅ [LOGIN] Success: Issa (Role: student )
-👉 [ATTENDANCE] Request: {
-  student_id: 7,
-  session_id: '9',
-  qr_token: 'f0f34bdedf0a275524585620539acf11',
-  latitude: -1.1022214,
-  longitude: 37.0136139,
-  device_id: 'DEV-88ZLJJUE-MLO1C7W8'
-}
+TypeError: Cannot read properties of undefined (reading 'admin_id')
+    at requireAdmin (/home/sia/Desktop/Code/AttendanceManagement/server.js:77:30)
+    at Layer.handleRequest (/home/sia/Desktop/Code/AttendanceManagement/node_modules/router/lib/layer.js:152:17)
+    at next (/home/sia/Desktop/Code/AttendanceManagement/node_modules/router/lib/route.js:157:13)
+    at Route.dispatch (/home/sia/Desktop/Code/AttendanceManagement/node_modules/router/lib/route.js:117:3)
+    at handle (/home/sia/Desktop/Code/AttendanceManagement/node_modules/router/index.js:435:11)
+    at Layer.handleRequest (/home/sia/Desktop/Code/AttendanceManagement/node_modules/router/lib/layer.js:152:17)
+    at /home/sia/Desktop/Code/AttendanceManagement/node_modules/router/index.js:295:15
+    at processParams (/home/sia/Desktop/Code/AttendanceManagement/node_modules/router/index.js:582:12)
+    at next (/home/sia/Desktop/Code/AttendanceManagement/node_modules/router/index.js:291:5)
+    at SendStream.error (/home/sia/Desktop/Code/AttendanceManagement/node_modules/serve-static/index.js:120:7)
