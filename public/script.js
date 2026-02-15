@@ -111,6 +111,29 @@ function updateStatus(icon, text, color) {
     el("status-title").style.color = color;
 }
 
+function displayLocation(elementId) {
+    const element = el(elementId);
+    if (!element) return;
+
+    if (!navigator.geolocation) {
+        element.innerText = "Geolocation not supported";
+        return;
+    }
+
+    navigator.geolocation.watchPosition(
+        (pos) => {
+            const lat = pos.coords.latitude.toFixed(5);
+            const lon = pos.coords.longitude.toFixed(5);
+            element.innerText = `Lat: ${lat}, Lon: ${lon}`;
+        },
+        (err) => {
+            element.innerText = "Location permission denied or unavailable";
+            console.error(err);
+        },
+        { enableHighAccuracy: true, maximumAge: 0 }
+    );
+}
+
 /* ================= MAIN ================= */
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -293,15 +316,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (el("class-title")) el("class-title").innerText = unit || "Live Class";
 
-        const qr = new QRCode(el("qrcode-container"), {
-            width: CONFIG.QR_CODE_SIZE,
-            height: CONFIG.QR_CODE_SIZE,
-        });
-
+        let qr = null;
         const refreshEverySec = Math.max(1, Math.round(CONFIG.QR_REFRESH_RATE_MS / 1000));
         let countdown = refreshEverySec;
 
         async function updateQR() {
+            if (!qr) return; // Wait for initialization
             try {
                 const data = await apiFetch(`/sessions/${sessionId}/token`, {
                     method: "PUT",
@@ -315,7 +335,13 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         }
 
-        updateQR();
+        window.addEventListener("load", () => {
+            qr = new QRCode(el("qrcode-container"), {
+                width: CONFIG.QR_CODE_SIZE,
+                height: CONFIG.QR_CODE_SIZE,
+            });
+            updateQR();
+        });
 
         const timerInterval = setInterval(() => {
             countdown--;
@@ -348,6 +374,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 window.open(`attendance.html?session=${sessionId}`, "_blank");
             };
         }
+
+        displayLocation("current-location");
     }
 
     /* ================= 4) STUDENT SCANNER PAGE ================= */
@@ -363,17 +391,20 @@ document.addEventListener("DOMContentLoaded", () => {
             alert("⚠️ GPS may fail because this site is not HTTPS. Use chrome flags or HTTPS if needed.");
         }
 
-        const scanner = new Html5QrcodeScanner("reader", {
-            fps: 10,
-            qrbox: 250,
-            videoConstraints: { facingMode: "environment" },
-            supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA],
+        let scanner = null;
+
+        window.addEventListener("load", () => {
+            scanner = new Html5QrcodeScanner("reader", {
+                fps: 10,
+                qrbox: 250,
+                videoConstraints: { facingMode: "environment" },
+                supportedScanTypes: [Html5QrcodeScanType.SCAN_TYPE_CAMERA],
+            });
+            scanner.render(onScanSuccess);
         });
 
-        scanner.render(onScanSuccess);
-
         function onScanSuccess(decodedText) {
-            scanner.clear();
+            if (scanner) scanner.clear();
             el("reader").style.display = "none";
             handleAttendance(decodedText);
         }
@@ -435,6 +466,8 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         if (el("retry-btn")) el("retry-btn").onclick = () => window.location.reload();
+
+        displayLocation("current-location");
     }
 
     /* ================= 5) ATTENDANCE LIST PAGE (LECTURER ONLY) ================= */

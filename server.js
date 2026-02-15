@@ -72,6 +72,26 @@ function parseBoolToTinyInt(v, defaultTrue = true) {
     return defaultTrue ? 1 : 0;
 }
 
+/* ================= ADMIN MIDDLEWARE ================= */
+function requireAdmin(req, res, next) {
+    const adminId = req.body.admin_id || req.query.admin_id || req.headers['x-admin-id'];
+
+    if (isBlank(adminId)) {
+        return res.status(401).json({ error: "Unauthorized: Admin ID required" });
+    }
+
+    const sql = "SELECT role FROM users WHERE id = ?";
+    db.query(sql, [adminId], (err, results) => {
+        if (err || results.length === 0) {
+            return res.status(401).json({ error: "Unauthorized: Invalid Admin ID" });
+        }
+        if (normalizeRole(results[0].role) !== 'admin') {
+            return res.status(403).json({ error: "Forbidden: Not an admin" });
+        }
+        next();
+    });
+}
+
 /* ================= AUTH ROUTES ================= */
 
 /**
