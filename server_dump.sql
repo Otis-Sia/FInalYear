@@ -16,16 +16,6 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
--- Current Database: `attendance_system`
---
-
-/*!40000 DROP DATABASE IF EXISTS `attendance_system`*/;
-
-CREATE DATABASE /*!32312 IF NOT EXISTS*/ `attendance_system` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci */ /*!80016 DEFAULT ENCRYPTION='N' */;
-
-USE `attendance_system`;
-
---
 -- Table structure for table `activity_logs`
 --
 
@@ -101,7 +91,6 @@ CREATE TABLE `sessions` (
   `qr_token` varchar(255) DEFAULT NULL,
   `is_active` tinyint(1) DEFAULT '1',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
-  `ended_at` timestamp NULL DEFAULT NULL,
   `latitude` decimal(10,8) DEFAULT NULL,
   `longitude` decimal(11,8) DEFAULT NULL,
   `require_gps` tinyint(1) DEFAULT '1',
@@ -191,4 +180,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2026-02-15 23:11:42
+-- Dump completed on 2026-02-15 23:10:16

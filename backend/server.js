@@ -1,5 +1,5 @@
 // server.js
-require("dotenv").config();
+require("dotenv").config({ path: require("path").join(__dirname, "..", ".env") });
 
 const express = require("express");
 const mysql = require("mysql2");
@@ -18,7 +18,7 @@ app.use(
     })
 );
 app.use(express.json());
-app.use(express.static("public"));
+app.use(express.static(require("path").join(__dirname, "..", "public")));
 
 /* ================= DATABASE CONNECTION ================= */
 const db = mysql.createPool({
@@ -57,66 +57,6 @@ const toNumber = (v) => {
 
 // ... other helpers ...
 
-function logActivity(userId, action, details = null) {
-    const sql = "INSERT INTO activity_logs (user_id, action, details) VALUES (?, ?, ?)";
-    db.query(sql, [userId, action, details], (err) => {
-        if (err) console.error("⚠️ Failed to log activity:", err.message);
-    });
-}
-
-// ... existing code ...
-
-/* ================= AUTH ROUTES ================= */
-
-// ... register ...
-
-/**
- * Login
- */
-app.post("/api/login", (req, res) => {
-    // ... existing ...
-
-    // Inside success block:
-    console.log("✅ [LOGIN] Success:", user.name, "(Role:", user.role, ")");
-
-    // Log activity
-    logActivity(user.id, 'LOGIN', 'User logged in');
-
-    return res.json({
-        success: true,
-        user: {
-            id: user.id,
-            name: user.name,
-            university_id: user.university_id,
-            role: normalizeRole(user.role)
-        }
-    });
-    // ...
-});
-
-/* ================= ADMIN ROUTES ================= */
-
-// List all users with Last Seen
-app.get("/api/admin/users", requireAdmin, (req, res) => {
-    console.log("👉 [ADMIN] Fetching users. Admin ID:", req.query.admin_id || req.headers['x-admin-id']);
-
-    const sql = `
-        SELECT u.id, u.full_name, u.user_id, u.email, u.role, u.created_at,
-        (SELECT MAX(timestamp) FROM activity_logs WHERE user_id = u.id) as last_seen
-        FROM users u
-        ORDER BY last_seen DESC, u.created_at DESC
-    `;
-
-    db.query(sql, (err, results) => {
-        if (err) {
-            console.error("❌ [ADMIN] Database error:", err);
-            return res.status(500).json({ error: "Database error" });
-        }
-        // Normalize roles
-        const users = results.map(u => ({ ...u, role: normalizeRole(u.role) }));
-        res.json(users);
-    });
-});
 
 function distanceMeters(lat1, lon1, lat2, lon2) {
     const R = 6371;
@@ -129,8 +69,8 @@ function distanceMeters(lat1, lon1, lat2, lon2) {
         Math.sin(dLon / 2) ** 2;
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     return R * c * 1000;
-
 }
+
 
 function normalizeRole(role) {
     return String(role || "").trim().toLowerCase();
