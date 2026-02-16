@@ -6,10 +6,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Live Class</title>
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="css/icons.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
 
 <body class="projector-mode">
+    <svg style="display: none;">
+        <use href="icons.svg"></use>
+    </svg>
+
     <h1 id="class-title">Loading...</h1>
     <p>Open App & Scan</p>
     <p id="current-location" style="font-weight: bold;">Fetching Location...</p>
@@ -17,8 +22,12 @@
     <div id="qrcode-container"></div>
 
     <div class="mt-2 text-center">
-        <p>Refresh: <span id="timer" class="timer-badge">5</span>s</p>
-        <button id="monitor-btn" class="btn-secondary" style="width: auto;">📄 List</button>
+        <p>Refresh: <span id="timer" class="timer-badge">6</span>s</p>
+        <button id="monitor-btn" class="btn-secondary" style="width: auto;">
+            <svg class="icon">
+                <use href="icons.svg#icon-document"></use>
+            </svg> List
+        </button>
         <button id="end-btn" class="btn-danger" style="width: auto;">End</button>
     </div>
     <script src="js/script.js"></script>

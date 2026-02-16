@@ -277,14 +277,14 @@ document.addEventListener("DOMContentLoaded", () => {
             const btn = el("start-btn");
             const originalText = btn.innerText;
             btn.disabled = true;
-            btn.innerText = "📍 Acquiring GPS...";
+            btn.innerHTML = '<svg class="icon"><use href="icons.svg#icon-location"></use></svg> Acquiring GPS...';
 
             try {
                 const pos = await getPositionWithTimeout(CONFIG.GPS_TIMEOUT_LECTURER_MS);
                 const lat = pos.coords.latitude;
                 const lon = pos.coords.longitude;
 
-                btn.innerText = "🚀 Starting Session...";
+                btn.innerText = "Starting Session...";
 
                 const data = await apiFetch("/sessions", {
                     method: "POST",
@@ -318,6 +318,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (el("class-title")) el("class-title").innerText = unit || "Live Class";
 
         let qr = null;
+        let eventSource = null;
         const refreshEverySec = Math.max(1, Math.round(CONFIG.QR_REFRESH_RATE_MS / 1000));
         let countdown = refreshEverySec;
 
@@ -336,19 +337,61 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         }
 
+        // Start SSE for real-time scan notifications
+        function startSSE() {
+            eventSource = new EventSource(`${CONFIG.API_BASE}/sessions/${sessionId}/events`);
+
+            eventSource.onopen = () => {
+                console.log("[SSE] Connection established for hybrid mode");
+            };
+
+            eventSource.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    if (data.type === 'attendance_marked') {
+                        console.log("[SSE] Attendance marked - regenerating QR immediately");
+                        updateQR();
+                        countdown = refreshEverySec; // Reset 6s timer
+                    }
+                } catch (err) {
+                    console.error("SSE message parse error:", err);
+                }
+            };
+
+            eventSource.onerror = (err) => {
+                console.error("SSE connection error:", err);
+                if (eventSource.readyState === EventSource.CLOSED) {
+                    console.log("SSE connection closed, will retry...");
+                }
+            };
+        }
+
+        function stopSSE() {
+            if (eventSource) {
+                eventSource.close();
+                eventSource = null;
+                console.log("[SSE] Connection closed");
+            }
+        }
+
         window.addEventListener("load", () => {
             qr = new QRCode(el("qrcode-container"), {
                 width: CONFIG.QR_CODE_SIZE,
                 height: CONFIG.QR_CODE_SIZE,
             });
             updateQR();
+
+            // Start SSE for hybrid mode (regenerate on scan OR timer)
+            startSSE();
         });
 
+        // Timer runs continuously - regenerates QR every 6s if no scan occurs
         const timerInterval = setInterval(() => {
             countdown--;
             if (el("timer")) el("timer").innerText = String(countdown);
 
             if (countdown <= 0) {
+                console.log("[Timer] Expired - regenerating QR");
                 updateQR();
                 countdown = refreshEverySec;
             }
@@ -364,6 +407,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 } catch (err) {
                     alert(err.message);
                 } finally {
+                    stopSSE(); // Clean up SSE connection
                     clearInterval(timerInterval);
                     window.location.href = "registerSessions.html";
                 }
@@ -389,7 +433,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (window.location.protocol !== "https:" && !isLocalhost) {
             // Not blocking, just warning
-            alert("⚠️ GPS may fail because this site is not HTTPS. Use chrome flags or HTTPS if needed.");
+            alert("WARNING: GPS may fail because this site is not HTTPS. Use chrome flags or HTTPS if needed.");
         }
 
         let scanner = null;
@@ -418,7 +462,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (!qrData.sid || !qrData.tok) throw new Error("Invalid QR payload");
             } catch {
                 if (el("result-area")) el("result-area").classList.remove("hidden");
-                updateStatus("❌", "Invalid QR. Please scan the Class QR.", "red");
+                updateStatus("ERROR", "Invalid QR. Please scan the Class QR.", "red");
                 if (el("retry-btn")) el("retry-btn").classList.remove("hidden");
                 return;
             }
@@ -426,14 +470,14 @@ document.addEventListener("DOMContentLoaded", () => {
             if (el("result-area")) el("result-area").classList.remove("hidden");
             if (el("debug-info")) el("debug-info").innerHTML = "";
 
-            updateStatus("⏳", "QR validated. Acquiring GPS...", "orange");
+            updateStatus("WAIT", "QR validated. Acquiring GPS...", "orange");
 
             try {
                 const pos = await getPositionWithTimeout(CONFIG.GPS_TIMEOUT_STUDENT_MS);
                 const lat = pos.coords.latitude;
                 const lon = pos.coords.longitude;
 
-                updateStatus("📡", "Sending to server...", "blue");
+                updateStatus("SEND", "Sending to server...", "blue");
 
                 const payload = {
                     student_id: user.id,
@@ -458,10 +502,10 @@ document.addEventListener("DOMContentLoaded", () => {
                     el("debug-info").innerHTML = html;
                 }
 
-                updateStatus("✅", `Attendance marked! (${data.distance}m)`, "green");
+                updateStatus("SUCCESS", `Attendance marked! (${data.distance}m)`, "green");
                 if (el("retry-btn")) el("retry-btn").classList.add("hidden");
             } catch (err) {
-                updateStatus("❌", err.message, "red");
+                updateStatus("ERROR", err.message, "red");
                 if (el("retry-btn")) el("retry-btn").classList.remove("hidden");
             }
         }
@@ -552,7 +596,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // Lecturer view
         async function loadLecturerHistory() {
             document.getElementById("lecturer-panel").classList.remove("hidden");
-            document.getElementById("history-title").textContent = "👨‍🏫 Lecturer History";
+            document.getElementById("history-title").textContent = "Lecturer History";
             document.getElementById("history-subtitle").textContent = "Your previous sessions and attendance lists.";
 
             const sessions = await apiFetch(`/history/lecturer/${user.id}/sessions`, { method: "GET" });
@@ -632,7 +676,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // Student view
         async function loadStudentHistory() {
             document.getElementById("student-panel").classList.remove("hidden");
-            document.getElementById("history-title").textContent = "🎓 My Attendance History";
+            document.getElementById("history-title").textContent = "My Attendance History";
             document.getElementById("history-subtitle").textContent = "Sessions you attended (your view only).";
 
             const attended = await apiFetch(`/history/student/${user.id}/attended`, { method: "GET" });

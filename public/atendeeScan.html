@@ -6,11 +6,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Scan</title>
     <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="css/icons.css" />
     <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 </head>
 
 <body class="scanner-mode">
-    <h2>📷 Scan QR</h2>
+    <svg style="display: none;">
+        <use href="icons.svg"></use>
+    </svg>
+
+    <h2>
+        <svg class="icon">
+            <use href="icons.svg#icon-camera"></use>
+        </svg> Scan QR
+    </h2>
     <p id="current-location" style="font-weight: bold; color: #007bff; text-align: center;">Fetching Location...</p>
     <div id="reader"></div>
 
@@ -22,7 +31,11 @@
     </div>
 
     <div class="mt-2 row" style="max-width: 420px; width: 100%;">
-        <a href="history.html" class="btn">📜 History</a>
+        <a href="history.html" class="btn">
+            <svg class="icon">
+                <use href="icons.svg#icon-scroll"></use>
+            </svg> History
+        </a>
         <button id="logout-btn" class="btn-danger">Logout</button>
     </div>
 

@@ -6,37 +6,58 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Dashboard</title>
     <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="css/icons.css" />
 </head>
 
 <body>
+    <svg style="display: none;">
+        <use href="icons.svg"></use>
+    </svg>
+
     <nav>
-        <span>👨‍🏫 Lecturer Portal</span>
+        <span>
+            <svg class="icon">
+                <use href="icons.svg#icon-teacher"></use>
+            </svg> Lecturer Portal
+        </span>
         <button id="logout-btn" class="btn-danger" style="width: auto;">Logout</button>
     </nav>
 
     <div class="centered-container" style="display: block; padding-top: 40px;">
         <div class="card" style="margin: 0 auto;">
-            <h3>🚀 Start a Class</h3>
+            <h3>
+                <svg class="icon">
+                    <use href="icons.svg#icon-rocket"></use>
+                </svg> Start a Class
+            </h3>
             <select id="unit-select">
-        <option value="" disabled selected>Loading...</option>
-      </select>
+                <option value="" disabled selected>Loading...</option>
+            </select>
             <button id="start-btn" class="btn-success">Start Session</button>
             <label style="display:flex; gap:10px; align-items:center; margin-top:10px;">
-  <input type="checkbox" id="require-gps" checked />
-  Require GPS (Physical class)
-</label>
+                <input type="checkbox" id="require-gps" checked />
+                Require GPS (Physical class)
+            </label>
 
         </div>
 
         <div class="card" style="margin: 20px auto;">
-            <h3>➕ Add Unit</h3>
+            <h3>
+                <svg class="icon">
+                    <use href="icons.svg#icon-plus"></use>
+                </svg> Add Unit
+            </h3>
             <input type="text" id="new-code" placeholder="Code (e.g. CCS 401)" />
             <input type="text" id="new-name" placeholder="Name" />
             <button id="add-unit-btn" type="button">Add Unit</button>
         </div>
 
         <div class="text-center mt-2">
-            <a href="history.html">📜 View Records</a>
+            <a href="history.html">
+                <svg class="icon">
+                    <use href="icons.svg#icon-scroll"></use>
+                </svg> View Records
+            </a>
         </div>
     </div>
 

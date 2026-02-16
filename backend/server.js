@@ -10,6 +10,9 @@ const crypto = require("crypto");
 const app = express();
 const PORT = Number(process.env.PORT) || 3000;
 
+// Store active SSE connections by session ID for QR refresh notifications
+const sseConnections = new Map();
+
 /* ================= MIDDLEWARE ================= */
 app.use(
     cors({
@@ -372,6 +375,46 @@ app.put("/api/sessions/:id/end", (req, res) => {
     });
 });
 
+/**
+ * SSE endpoint for QR refresh notifications
+ * Allows admin QR page to receive real-time events when attendance is marked
+ */
+app.get("/api/sessions/:id/events", (req, res) => {
+    const sessionId = toNumber(req.params.id);
+
+    if (!Number.isFinite(sessionId)) return res.status(400).json({ error: "Invalid session id" });
+
+    // Set SSE headers
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    res.setHeader('X-Accel-Buffering', 'no'); // Disable nginx buffering
+
+    // Send initial comment to establish connection
+    res.write(': connected\n\n');
+
+    // Store connection
+    if (!sseConnections.has(sessionId)) {
+        sseConnections.set(sessionId, []);
+    }
+    sseConnections.get(sessionId).push(res);
+
+    console.log(`✅ [SSE] Client connected for session ${sessionId}. Active connections: ${sseConnections.get(sessionId).length}`);
+
+    // Remove on disconnect
+    req.on('close', () => {
+        const connections = sseConnections.get(sessionId) || [];
+        const index = connections.indexOf(res);
+        if (index !== -1) {
+            connections.splice(index, 1);
+            console.log(`❌ [SSE] Client disconnected from session ${sessionId}. Remaining: ${connections.length}`);
+        }
+        if (connections.length === 0) {
+            sseConnections.delete(sessionId);
+        }
+    });
+});
+
 /* ================= ATTENDANCE ROUTES ================= */
 
 /**
@@ -497,6 +540,20 @@ app.post("/api/attendance", (req, res) => {
                         }
                         console.error("Insert attendance error:", err4);
                         return res.status(500).json({ error: "Failed to mark attendance" });
+                    }
+
+                    // Emit SSE event to all connected clients for this session
+                    const connections = sseConnections.get(sessionId) || [];
+                    if (connections.length > 0) {
+                        const eventData = JSON.stringify({ type: 'attendance_marked', sessionId });
+                        connections.forEach(client => {
+                            try {
+                                client.write(`data: ${eventData}\n\n`);
+                            } catch (writeErr) {
+                                console.error("SSE write error:", writeErr.message);
+                            }
+                        });
+                        console.log(`📡 [SSE] Notified ${connections.length} client(s) for session ${sessionId}`);
                     }
 
                     return res.json({ success: true, distance: Math.round(dist) });
