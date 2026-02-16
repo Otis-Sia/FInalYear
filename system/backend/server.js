@@ -192,27 +192,6 @@ app.get("/api/units/:lecturer_id", (req, res) => {
     });
 });
 
-// Add unit
-app.post("/api/units", (req, res) => {
-    const { unit_code, unit_name, lecturer_id } = req.body;
-
-    if (isBlank(unit_code) || isBlank(unit_name) || isBlank(lecturer_id)) {
-        return res.status(400).json({ error: "Missing details (unit_code, unit_name, lecturer_id)" });
-    }
-
-    const lecturerId = toNumber(lecturer_id);
-    if (!Number.isFinite(lecturerId)) return res.status(400).json({ error: "Invalid lecturer_id" });
-
-    const sql = "INSERT INTO units (unit_code, unit_name, lecturer_id) VALUES (?, ?, ?)";
-    db.query(sql, [String(unit_code).trim(), String(unit_name).trim(), lecturerId], (err) => {
-        if (err) {
-            console.error("Add unit error:", err);
-            return res.status(500).json({ error: "Failed to add unit" });
-        }
-        res.json({ success: true });
-    });
-});
-
 /* ================= SESSION ROUTES ================= */
 
 /**
