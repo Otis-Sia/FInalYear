@@ -13,10 +13,10 @@ const el = (id) => document.getElementById(id);
 /* ================= API HELPER ================= */
 
 async function apiFetch(path, options = {}) {
-    const res = await fetch(`${CONFIG.API_BASE}${path}`, {
-        headers: { "Content-Type": "application/json", ...(options.headers || {}) },
-        ...options,
-    });
+    const headers = { "Content-Type": "application/json", ...(options.headers || {}) };
+    const config = { ...options, headers };
+
+    const res = await fetch(`${CONFIG.API_BASE}${path}`, config);
 
     let data = null;
     try {
@@ -147,29 +147,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     /* ================= 1) LOGIN & REGISTER ================= */
     if (el("auth-form")) {
-        let isLoginMode = true;
-
-        el("toggle-link").addEventListener("click", (e) => {
-            e.preventDefault();
-            isLoginMode = !isLoginMode;
-
-            el("form-title").innerText = isLoginMode ? "Login" : "Register";
-            el("submit-btn").innerText = isLoginMode ? "Sign In" : "Create Account";
-            el("toggle-text").innerText = isLoginMode ? "New here?" : "Already have an account?";
-            el("toggle-link").innerText = isLoginMode ? "Create Account" : "Back to Login";
-
-            el("name-group").classList.toggle("hidden", isLoginMode);
-            el("role-group").classList.toggle("hidden", isLoginMode);
-
-            if (isLoginMode) {
-                el("full_name").removeAttribute("required");
-                el("role").removeAttribute("required");
-            } else {
-                el("full_name").setAttribute("required", "true");
-                el("role").setAttribute("required", "true");
-            }
-        });
-
+        // Login Only Mode
         el("auth-form").addEventListener("submit", async (e) => {
             e.preventDefault();
 
@@ -184,31 +162,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 if (!university_id || !password) throw new Error("Please enter your ID and password.");
 
-                if (isLoginMode) {
-                    const data = await apiFetch("/login", {
-                        method: "POST",
-                        body: JSON.stringify({ university_id, password }),
-                    });
+                const data = await apiFetch("/login", {
+                    method: "POST",
+                    body: JSON.stringify({ university_id, password }),
+                });
 
-                    localStorage.setItem("user", JSON.stringify(data.user));
+                localStorage.setItem("user", JSON.stringify(data.user));
 
-                    const role = String(data.user.role || "").trim().toLowerCase();
-                    if (role === 'admin') window.location.href = "admin.html";
-                    else window.location.href = role === "lecturer" ? "registerSessions.html" : "atendeeScan.html";
-                } else {
-                    const name = el("full_name").value.trim();
-                    const role = el("role").value; // should be lowercase values in HTML: student/lecturer
+                const role = String(data.user.role || "").trim().toLowerCase();
+                if (role === 'admin') window.location.href = "admin.html";
+                else window.location.href = role === "lecturer" ? "registerSessions.html" : "atendeeScan.html";
 
-                    if (!name || !role) throw new Error("Please enter your name and role.");
-
-                    await apiFetch("/register", {
-                        method: "POST",
-                        body: JSON.stringify({ name, university_id, password, role }),
-                    });
-
-                    alert("Registration successful! Please login.");
-                    location.reload();
-                }
             } catch (err) {
                 alert(err.message);
                 btn.disabled = false;

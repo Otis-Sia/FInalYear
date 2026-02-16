@@ -114,47 +114,7 @@ function requireAdmin(req, res, next) {
  * Optional: email (only if your DB supports NULL emails)
  */
 app.post("/api/register", async (req, res) => {
-    console.log("👉 [REGISTER] Request Body:", req.body);
-    const { name, university_id, password, role, email } = req.body;
-
-    if (isBlank(name) || isBlank(university_id) || isBlank(password) || isBlank(role)) {
-        return res.status(400).json({ error: "All fields are required (name, university_id, password, role)" });
-    }
-
-    const normalizedRole = normalizeRole(role);
-    if (!["student", "lecturer"].includes(normalizedRole)) {
-        return res.status(400).json({ error: "Invalid role (student or lecturer)" });
-    }
-
-    try {
-        const hashedPassword = await bcrypt.hash(String(password), 10);
-
-        // If your schema has email NULL allowed, include it. Otherwise remove email parts.
-        const hasEmail = !isBlank(email);
-        const sql = hasEmail ?
-            `INSERT INTO users (full_name, user_id, email, password, role) VALUES (?, ?, ?, ?, ?)` :
-            `INSERT INTO users (full_name, user_id, password, role) VALUES (?, ?, ?, ?)`;
-
-        const values = hasEmail ?
-            [String(name).trim(), String(university_id).trim(), String(email).trim(), hashedPassword, normalizedRole] :
-            [String(name).trim(), String(university_id).trim(), hashedPassword, normalizedRole];
-
-        db.query(sql, values, (err) => {
-            if (err) {
-                if (err.code === "ER_DUP_ENTRY") {
-                    console.warn("⚠️ [REGISTER] Duplicate entry:", err.message);
-                    return res.status(409).json({ error: "User already exists (ID or email already used)" });
-                }
-                console.error("❌ [REGISTER] DB Error:", err);
-                return res.status(500).json({ error: "Database error: " + err.message });
-            }
-            console.log("✅ [REGISTER] Success for user:", name);
-            return res.json({ success: true });
-        });
-    } catch (err) {
-        console.error("Register error:", err);
-        return res.status(500).json({ error: "Server error" });
-    }
+    return res.status(403).json({ error: "Public registration is disabled. Please contact an administrator." });
 });
 
 /**
@@ -679,7 +639,7 @@ app.get("/api/admin/users", requireAdmin, (req, res) => {
 
 // Create user (Admin only)
 app.post("/api/admin/users", requireAdmin, async (req, res) => {
-    const { name, university_id, password, role, email } = req.body;
+    const { name, university_id, password, role, email } = req.body || {};
 
     if (isBlank(name) || isBlank(university_id) || isBlank(password) || isBlank(role)) {
         return res.status(400).json({ error: "Missing fields" });
@@ -746,7 +706,7 @@ app.get("/api/admin/units", requireAdmin, (req, res) => {
 
 // Create Unit (Admin)
 app.post("/api/admin/units", requireAdmin, (req, res) => {
-    const { unit_code, unit_name, lecturer_id } = req.body;
+    const { unit_code, unit_name, lecturer_id } = req.body || {};
     if (isBlank(unit_code) || isBlank(unit_name)) return res.status(400).json({ error: "Missing info" });
 
     // Lecturer ID can be null if not assigned yet? Schema says user can be null. 
