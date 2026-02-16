@@ -195,7 +195,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 select.innerHTML = `<option value="" disabled selected>-- Select Unit --</option>`;
 
                 if (!units.length) {
-                    select.innerHTML += `<option disabled>No units found. Add one below.</option>`;
+                    select.innerHTML += `<option disabled>No units found. Contact admin to add one.</option>`;
                     return;
                 }
 
@@ -211,28 +211,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         loadUnits();
-
-        if (el("add-unit-btn")) {
-            el("add-unit-btn").addEventListener("click", async () => {
-                const code = el("new-code").value.trim();
-                const name = el("new-name").value.trim();
-                if (!code || !name) return alert("Please fill in both Code and Name");
-
-                try {
-                    await apiFetch("/units", {
-                        method: "POST",
-                        body: JSON.stringify({ unit_code: code, unit_name: name, lecturer_id: user.id }),
-                    });
-
-                    alert("Unit Added!");
-                    el("new-code").value = "";
-                    el("new-name").value = "";
-                    loadUnits();
-                } catch (err) {
-                    alert(err.message);
-                }
-            });
-        }
 
         el("start-btn").addEventListener("click", async () => {
             const unit = el("unit-select").value;
