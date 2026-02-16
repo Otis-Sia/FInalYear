@@ -14,8 +14,13 @@ if ! command -v node &> /dev/null; then
     exit 1
 fi
 
-# Navigate to the script's directory (project root)
-cd "$(dirname "$0")"
+# Navigate to the system directory
+SYSTEM_DIR="$(dirname "$0")/system"
+if [ ! -d "$SYSTEM_DIR" ]; then
+    echo "❌ System directory not found at $SYSTEM_DIR. Please ensure the 'system' folder exists."
+    exit 1
+fi
+cd "$SYSTEM_DIR"
 
 # Check for node_modules and install dependencies if missing
 if [ ! -d "node_modules" ]; then
