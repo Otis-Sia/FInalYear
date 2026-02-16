@@ -49,17 +49,6 @@ Authenticates a user and returns their role and ID.
 Lists units assigned to a specific lecturer.
 - **Response**: `200 [ { "id": 1, "unit_code": "CS101", "unit_name": "Intro to CS" }, ... ]`
 
-#### `POST /api/units`
-Adds a new unit (usually an admin function, but potentially usable by lecturers if allowed).
-- **Request Body**:
-  ```json
-  {
-    "unit_code": "CS101",
-    "unit_name": "Intro to CS",
-    "lecturer_id": 5
-  }
-  ```
-
 ### ⏰ Session Management
 
 #### `POST /api/sessions`
