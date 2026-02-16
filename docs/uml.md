@@ -214,6 +214,14 @@ Shows the states of a class session.
 @startuml
 [*] --> Created : Lecturer initializes session
 
+Created --> Active : Started with unit selection
+Active --> Active : QR Token Refreshed
+Active --> Ended : Manual End / Timeout
+
+Ended --> [*]
+@enduml
+```
+
 ## 6. Class Diagram
 
 While the backend is functional/procedural Node.js, this diagram represents the logical modules and data structures.
@@ -364,13 +372,5 @@ SSE -up-> FE : "Real-time Refresh"
 
 note right of API : Handles Auth, Attendance,\nSessions, and Admin tasks.
 note left of FE : HTML, CSS, Vanilla JS,\nPWA Service Workers.
-@enduml
-```
-
-Created --> Active : Started with unit selection
-Active --> Active : QR Token Refreshed
-Active --> Ended : Manual End / Timeout
-
-Ended --> [*]
 @enduml
 ```
