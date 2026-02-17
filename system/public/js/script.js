@@ -491,6 +491,19 @@ document.addEventListener("DOMContentLoaded", () => {
 
         refreshAttendance();
         setInterval(refreshAttendance, 3000);
+
+        if (el("close-btn")) {
+            el("close-btn").onclick = () => {
+                // Try to close
+                window.close();
+                // If still open (navigated directly), go back
+                setTimeout(() => {
+                    if (!window.closed) {
+                        window.location.href = "registerSessions.html";
+                    }
+                }, 100);
+            };
+        }
     }
 
     /* ================= 6) HISTORY PAGE (ROLE-BASED) ================= */
