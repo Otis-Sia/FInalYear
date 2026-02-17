@@ -53,6 +53,17 @@ else
     echo "✅ Nginx is already running."
 fi
 
+# Deploy HTTPS site via nginx (self-signed by default). Set HTTPS=0 to skip.
+if [ "${HTTPS:-1}" != "0" ]; then
+    echo "🔐 Deploying HTTPS site via nginx (this may prompt for sudo)..."
+    if [ -x "system/deploy_https.sh" ]; then
+        sudo bash system/deploy_https.sh detect || {
+            echo "❌ HTTPS deploy failed; aborting start."; exit 1; }
+    else
+        echo "⚠️ system/deploy_https.sh not found or not executable; skipping HTTPS deploy."
+    fi
+fi
+
 echo "🚀 Starting server on port $PORT..."
 echo "Press Ctrl+C to stop the server."
 echo "=============================================="
