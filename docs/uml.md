@@ -1,6 +1,5 @@
 # System UML Diagrams
 
-
 This document contains UML diagrams for the Attendance Management System, represented in [PlantUML](https://plantuml.com/) format.
 
 ## 1. System Architecture Diagram
@@ -209,24 +208,11 @@ FE --> Student : Show Status Message
 
 ## 5. State Machine Diagram: Session Lifecycle
 
-Shows the states of a class session based on the `is_active` flag.
+Shows the states of a class session.
 
 ```plantuml
 @startuml
-!theme toy
-hide empty description
-
 [*] --> Created : Lecturer initializes session
-
-state "Active Session" as Active {
-    Active : is_active = 1
-    Active : has valid qr_token
-}
-
-state "Ended Session" as Ended {
-    Ended : is_active = 0
-    Ended : ended_at = CURRENT_TIMESTAMP
-}
 
 Created --> Active : Started with unit selection
 Active --> Active : QR Token Refreshed
@@ -387,6 +373,4 @@ SSE -up-> FE : "Real-time Refresh"
 note right of API : Handles Auth, Attendance,\nSessions, and Admin tasks.
 note left of FE : HTML, CSS, Vanilla JS,\nPWA Service Workers.
 @enduml
-```
-
 ```
